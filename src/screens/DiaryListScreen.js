@@ -52,13 +52,15 @@ export default function DiaryListScreen() {
   const [query, setQuery] = useState('');
   const [likedIds, setLikedIds] = useState(new Set());
   const [selected, setSelected] = useState(null);
+  const [contentWidth, setContentWidth] = useState(null);
 
   const { width } = useWindowDimensions();
   const twoCols = width >= BREAKPOINTS.tablet;
   const numColumns = twoCols ? 2 : 1;
   const keyForCols = `cols-${numColumns}`;
+  const availWidth = contentWidth ?? width;
   const itemWidth = twoCols
-    ? (width - SPACE.l * 2 - SPACE.m) / 2
+    ? Math.floor((availWidth - SPACE.l * 2 - SPACE.m) / 2)
     : undefined;
 
   // Muat entri tersimpan saat layar pertama kali tampil.
@@ -154,7 +156,10 @@ export default function DiaryListScreen() {
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
-          <View style={styles.headerWrap}>
+          <View
+            style={styles.headerWrap}
+            onLayout={(e) => setContentWidth(e.nativeEvent.layout.width)}
+          >
             <SearchBar value={query} onChange={setQuery} />
             <EntryForm onSubmit={addEntry} />
           </View>
