@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -11,17 +11,35 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACE, RADIUS, TYPO } from '../styles/tokens';
 
-export default function DiaryDetailModal({ visible, onClose, entry }) {
+const DANGER = '#DC2626';
+
+export default function DiaryDetailModal({
+  visible,
+  onClose,
+  onDelete,
+  entry,
+}) {
   // Simpan entri terakhir supaya isi modal tidak hilang saat animasi tutup.
   const lastEntry = useRef(entry);
+  const [confirming, setConfirming] = useState(false);
   if (entry) lastEntry.current = entry;
   const shown = lastEntry.current;
 
   if (!shown) return null;
-  const { title, date, body, moodImage } = shown;
+  const { id, title, date, body, moodImage } = shown;
+
+  const close = () => {
+    setConfirming(false);
+    onClose();
+  };
+
+  const confirmDelete = () => {
+    setConfirming(false);
+    onDelete?.(id);
+  };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <ScrollView>
           <Image source={moodImage} style={styles.hero} resizeMode="cover" />
@@ -29,9 +47,40 @@ export default function DiaryDetailModal({ visible, onClose, entry }) {
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.date}>{date}</Text>
             <Text style={styles.body}>{body}</Text>
-            <Pressable onPress={onClose} style={styles.button}>
+
+            <Pressable onPress={close} style={styles.button}>
               <Text style={styles.buttonText}>Tutup</Text>
             </Pressable>
+
+            {!confirming ? (
+              <Pressable
+                onPress={() => setConfirming(true)}
+                style={styles.deleteButton}
+                accessibilityLabel="Hapus entri"
+              >
+                <Text style={styles.deleteText}>Hapus</Text>
+              </Pressable>
+            ) : (
+              <View style={styles.confirmBox}>
+                <Text style={styles.confirmText}>
+                  Hapus entri ini? Tindakan ini tidak bisa dibatalkan.
+                </Text>
+                <View style={styles.confirmRow}>
+                  <Pressable
+                    onPress={() => setConfirming(false)}
+                    style={[styles.confirmButton, styles.cancelButton]}
+                  >
+                    <Text style={styles.cancelText}>Batal</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={confirmDelete}
+                    style={[styles.confirmButton, styles.yesButton]}
+                  >
+                    <Text style={styles.yesText}>Ya, hapus</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -60,4 +109,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: { color: '#fff', fontWeight: '700' },
+  deleteButton: {
+    padding: SPACE.m,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderColor: DANGER,
+    alignItems: 'center',
+  },
+  deleteText: { color: DANGER, fontWeight: '700' },
+  confirmBox: {
+    padding: SPACE.m,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderColor: DANGER,
+    gap: SPACE.m,
+  },
+  confirmText: { color: COLORS.text, fontSize: TYPO.body },
+  confirmRow: { flexDirection: 'row', gap: SPACE.m },
+  confirmButton: {
+    flex: 1,
+    padding: SPACE.m,
+    borderRadius: RADIUS.card,
+    alignItems: 'center',
+  },
+  cancelButton: { borderWidth: 1, borderColor: COLORS.border },
+  cancelText: { color: COLORS.text, fontWeight: '700' },
+  yesButton: { backgroundColor: DANGER },
+  yesText: { color: '#fff', fontWeight: '700' },
 });

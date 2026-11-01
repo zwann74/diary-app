@@ -116,6 +116,10 @@ export default function DiaryListScreen() {
   const addEntry = (newEntry) => {
     setEntries((prev) => [newEntry, ...prev]);
   };
+  const deleteEntry = (id) => {
+    setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    setSelected(null);
+  };
 
   const renderItem = ({ item }) => (
     <View style={itemWidth ? { width: itemWidth } : undefined}>
@@ -164,6 +168,7 @@ export default function DiaryListScreen() {
         visible={!!selected}
         entry={selected}
         onClose={() => setSelected(null)}
+        onDelete={deleteEntry}
       />
     </KeyboardAvoidingView>
   );
