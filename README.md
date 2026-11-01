@@ -20,6 +20,7 @@
 - `EntryForm` untuk menambah entri baru (judul, tanggal, ringkasan).
 - Data awal berisi 3 entri lengkap dengan ringkasan dan isi.
 - Entri disimpan permanen dengan AsyncStorage, jadi tetap ada setelah aplikasi dimuat ulang.
+- Hapus entri dengan konfirmasi di dalam modal detail.
 
 ## Struktur Proyek
 
@@ -44,5 +45,5 @@ Prop `key={keyForCols}` dipasang pada `FlatList` karena React Native tidak mengi
 
 ## Keterbatasan Saat Ini
 
-- Belum ada fitur edit dan hapus entri.
+- Belum ada fitur edit entri.
 - Status suka belum disimpan, jadi hilang saat aplikasi dimuat ulang.
