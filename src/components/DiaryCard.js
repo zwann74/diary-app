@@ -3,18 +3,23 @@ import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { COLORS, SPACE, RADIUS, TYPO } from '../styles/tokens';
 
 export default function DiaryCard({
-  title, date, preview, moodUri, onPress, variant = 'list'
+  title,
+  date,
+  preview,
+  moodImage,
+  liked = false,
+  onPress = () => {},
+  onToggleLike = () => {},
 }) {
   return (
     <Pressable
       onPress={onPress}
-      android_ripple={{ color: '#e5e7eb' }}
       style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
       accessible
       accessibilityLabel={`Entri ${title} tanggal ${date}`}
     >
-      <View style={[styles.card, variant === 'grid' && styles.cardGrid]}>
-        <Image source={{ uri: moodUri }} style={styles.mood} />
+      <View style={styles.card}>
+        <Image source={moodImage} style={styles.mood} />
         <View style={styles.content}>
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
           <Text style={styles.date}>{date}</Text>
@@ -22,6 +27,13 @@ export default function DiaryCard({
             {preview}
           </Text>
         </View>
+        <Pressable
+          onPress={onToggleLike}
+          hitSlop={8}
+          accessibilityLabel={liked ? 'Batal suka' : 'Suka'}
+        >
+          <Text style={styles.like}>{liked ? '❤️' : '🤍'}</Text>
+        </Pressable>
       </View>
     </Pressable>
   );
@@ -36,10 +48,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: RADIUS.card,
     backgroundColor: COLORS.surface,
+    alignItems: 'center', // <-- Ini ditambahkan
   },
-  cardGrid: {},
   mood: {
-    width: 64, height: 64,
+    width: 64, 
+    height: 64,
     borderRadius: RADIUS.avatar,
     backgroundColor: '#eef2ff',
   },
@@ -47,4 +60,5 @@ const styles = StyleSheet.create({
   title: { fontSize: TYPO.title, fontWeight: '700', color: COLORS.text },
   date: { fontSize: TYPO.caption, color: COLORS.muted, marginBottom: 6 },
   preview: { fontSize: TYPO.body, color: COLORS.text },
+  like: { fontSize: 22, paddingHorizontal: 6 }, // <-- Ini ditambahkan
 });
