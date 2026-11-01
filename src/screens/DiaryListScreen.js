@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { COLORS, SPACE, TYPO } from '../styles/tokens';
+import { View, Text, StyleSheet, FlatList, useWindowDimensions } from 'react-native';
+import { COLORS, SPACE, TYPO, BREAKPOINTS } from '../styles/tokens';
 import DiaryCard from '../components/DiaryCard';
 import DiaryDetailModal from '../components/DiaryDetailModal';
 import SearchBar from '../components/SearchBar';
@@ -39,6 +39,13 @@ export default function DiaryListScreen() {
   const [query, setQuery] = useState('');
   const [likedIds, setLikedIds] = useState(new Set());
   const [selected, setSelected] = useState(null);
+  const { width } = useWindowDimensions();
+  const twoCols = width >= BREAKPOINTS.tablet;
+  const numColumns = twoCols ? 2 : 1;
+  const keyForCols = `cols-${numColumns}`;
+  const itemWidth = twoCols
+  ? (width - SPACE.l * 2 - SPACE.m) / 2
+  : undefined;
 
   // DERIVED STATE: Memfilter entri berdasarkan kata kunci pencarian
   const filtered = useMemo(() => {
@@ -67,16 +74,18 @@ export default function DiaryListScreen() {
     setEntries((prev) => [newEntry, ...prev]);
   };
 
-  const renderItem = ({ item }) => (
-    <DiaryCard
-      title={item.title}
-      date={item.date}
-      preview={item.preview}
-      moodImage={item.moodImage}
-      liked={likedIds.has(item.id)}
-      onToggleLike={() => toggleLike(item.id)}
-      onPress={() => setSelected(item)}
-    />
+    const renderItem = ({ item }) => (
+      <View style={itemWidth ? { width: itemWidth } : undefined}>
+      <DiaryCard
+        title={item.title}
+        date={item.date}
+        preview={item.preview}
+        moodImage={item.moodImage}
+        liked={likedIds.has(item.id)}
+        onToggleLike={() => toggleLike(item.id)}
+        onPress={() => setSelected(item)}
+      />
+    </View>
   );
 
   return (
@@ -88,6 +97,9 @@ export default function DiaryListScreen() {
       
       <FlatList
         data={filtered}
+        key={keyForCols}
+        numColumns={numColumns}
+        columnWrapperStyle={twoCols ? styles.row : undefined}
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
@@ -122,9 +134,10 @@ const styles = StyleSheet.create({
     gap: SPACE.m,
     paddingTop: SPACE.m,
   },
-  empty: {
+    empty: {
     textAlign: 'center',
     color: COLORS.muted,
     marginTop: 40,
   },
+  row: { gap: SPACE.m },
 });
