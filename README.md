@@ -19,6 +19,7 @@
 - `SearchBar` untuk mencari entri berdasarkan judul, ringkasan, atau tanggal.
 - `EntryForm` untuk menambah entri baru (judul, tanggal, ringkasan).
 - Data awal berisi 3 entri lengkap dengan ringkasan dan isi.
+- Entri disimpan permanen dengan AsyncStorage, jadi tetap ada setelah aplikasi dimuat ulang.
 
 ## Struktur Proyek
 
@@ -26,6 +27,7 @@
 App.js
 src/
   components/   DiaryCard, DiaryDetailModal, SearchBar, EntryForm
+  data/         moods.js
   screens/      DiaryListScreen
   styles/       tokens.js
 assets/moods/   gambar mood (JPG, maks 800px)
@@ -42,5 +44,5 @@ Prop `key={keyForCols}` dipasang pada `FlatList` karena React Native tidak mengi
 
 ## Keterbatasan Saat Ini
 
-- Data belum disimpan permanen. Entri baru hilang saat aplikasi dimuat ulang.
 - Belum ada fitur edit dan hapus entri.
+- Status suka belum disimpan, jadi hilang saat aplikasi dimuat ulang.
