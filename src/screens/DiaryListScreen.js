@@ -1,10 +1,22 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform, } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SPACE, TYPO, BREAKPOINTS } from '../styles/tokens';
+import { getMoodImage } from '../data/moods';
 import DiaryCard from '../components/DiaryCard';
 import DiaryDetailModal from '../components/DiaryDetailModal';
 import SearchBar from '../components/SearchBar';
 import EntryForm from '../components/EntryForm';
+
+const STORAGE_KEY = 'diary-app:entries';
 
 const INITIAL_ENTRIES = [
   {
@@ -13,7 +25,7 @@ const INITIAL_ENTRIES = [
     date: '2026-10-18',
     preview: 'Jalan pagi 20 menit dan menikmati udara segar.',
     body: 'Hari ini aku bangun lebih pagi dan berjalan kaki selama 20 menit.',
-    moodImage: require('../../assets/moods/happy.jpg'),
+    mood: 'happy',
   },
   {
     id: 2,
@@ -21,7 +33,7 @@ const INITIAL_ENTRIES = [
     date: '2026-10-17',
     preview: 'Menyelesaikan modul praktikum dan berdiskusi dengan tim.',
     body: 'Hari ini cukup produktif karena beberapa target perkuliahan selesai.',
-    moodImage: require('../../assets/moods/focus.jpg'),
+    mood: 'focus',
   },
   {
     id: 3,
@@ -29,23 +41,54 @@ const INITIAL_ENTRIES = [
     date: '2026-10-16',
     preview: 'Membaca buku sambil menikmati suasana senja.',
     body: 'Sore ini saya menikmati waktu di taman sambil membaca buku.',
-    moodImage: require('../../assets/moods/calm.jpg'),
-  }
+    mood: 'calm',
+  },
 ];
 
 export default function DiaryListScreen() {
   // STATE UTAMA
   const [entries, setEntries] = useState(INITIAL_ENTRIES);
+  const [loaded, setLoaded] = useState(false);
   const [query, setQuery] = useState('');
   const [likedIds, setLikedIds] = useState(new Set());
   const [selected, setSelected] = useState(null);
+
   const { width } = useWindowDimensions();
   const twoCols = width >= BREAKPOINTS.tablet;
   const numColumns = twoCols ? 2 : 1;
   const keyForCols = `cols-${numColumns}`;
   const itemWidth = twoCols
-  ? (width - SPACE.l * 2 - SPACE.m) / 2
-  : undefined;
+    ? (width - SPACE.l * 2 - SPACE.m) / 2
+    : undefined;
+
+  // Muat entri tersimpan saat layar pertama kali tampil.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY);
+        if (raw && active) {
+          const saved = JSON.parse(raw);
+          if (Array.isArray(saved)) setEntries(saved);
+        }
+      } catch (e) {
+        console.warn('Gagal memuat entri:', e);
+      } finally {
+        if (active) setLoaded(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Simpan setiap kali entri berubah, setelah pemuatan awal selesai.
+  useEffect(() => {
+    if (!loaded) return;
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(entries)).catch((e) =>
+      console.warn('Gagal menyimpan entri:', e)
+    );
+  }, [entries, loaded]);
 
   // DERIVED STATE: Memfilter entri berdasarkan kata kunci pencarian
   const filtered = useMemo(() => {
@@ -74,21 +117,23 @@ export default function DiaryListScreen() {
     setEntries((prev) => [newEntry, ...prev]);
   };
 
-    const renderItem = ({ item }) => (
-      <View style={itemWidth ? { width: itemWidth } : undefined}>
+  const renderItem = ({ item }) => (
+    <View style={itemWidth ? { width: itemWidth } : undefined}>
       <DiaryCard
         title={item.title}
         date={item.date}
         preview={item.preview}
-        moodImage={item.moodImage}
+        moodImage={getMoodImage(item.mood)}
         liked={likedIds.has(item.id)}
         onToggleLike={() => toggleLike(item.id)}
-        onPress={() => setSelected(item)}
+        onPress={() =>
+          setSelected({ ...item, moodImage: getMoodImage(item.mood) })
+        }
       />
     </View>
   );
 
-    return (
+  return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -132,16 +177,16 @@ const styles = StyleSheet.create({
   header: {
     fontSize: TYPO.h1,
     fontWeight: '700',
-    paddingHorizontal: SPACE.l, // huruf l kecil
-    paddingTop: SPACE.l,        // huruf l kecil
+    paddingHorizontal: SPACE.l,
+    paddingTop: SPACE.l,
     color: COLORS.text,
   },
   listContent: {
-    padding: SPACE.l,           // huruf l kecil
+    padding: SPACE.l,
     gap: SPACE.m,
     paddingTop: SPACE.m,
   },
-    empty: {
+  empty: {
     textAlign: 'center',
     color: COLORS.muted,
     marginTop: 40,

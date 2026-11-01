@@ -38,7 +38,7 @@ export default function EntryForm({ onSubmit }) {
       date: date.trim(),
       preview: preview.trim(),
       body: body.trim() || preview.trim(),
-      moodImage: require('../../assets/moods/default.jpg'),
+      mood: 'default',
     });
 
     setTitle('');
