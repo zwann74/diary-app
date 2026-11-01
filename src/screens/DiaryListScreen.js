@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, useWindowDimensions, KeyboardAvoidingView, Platform, } from 'react-native';
 import { COLORS, SPACE, TYPO, BREAKPOINTS } from '../styles/tokens';
 import DiaryCard from '../components/DiaryCard';
 import DiaryDetailModal from '../components/DiaryDetailModal';
@@ -88,13 +88,13 @@ export default function DiaryListScreen() {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
+    return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <Text style={styles.header}>Buku Harian</Text>
-      
-      <SearchBar onChange={setQuery} />
-      <EntryForm onSubmit={addEntry} />
-      
+
       <FlatList
         data={filtered}
         key={keyForCols}
@@ -103,17 +103,24 @@ export default function DiaryListScreen() {
         keyExtractor={(item) => String(item.id)}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          <View style={styles.headerWrap}>
+            <SearchBar value={query} onChange={setQuery} />
+            <EntryForm onSubmit={addEntry} />
+          </View>
+        }
         ListEmptyComponent={
           <Text style={styles.empty}>Belum ada entri.</Text>
         }
       />
-      
+
       <DiaryDetailModal
         visible={!!selected}
         entry={selected}
         onClose={() => setSelected(null)}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -140,4 +147,5 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   row: { gap: SPACE.m },
+  headerWrap: { marginHorizontal: -SPACE.l },
 });

@@ -1,23 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import { COLORS, SPACE, RADIUS } from '../styles/tokens';
 
 export default function SearchBar({
   placeholder = 'Cari entri...',
+  value,
   onChange,
 }) {
-  const [queryText, setQueryText] = useState('');
-
-  const handleChange = (text) => {
-    setQueryText(text);
-    onChange?.(text);
-  };
-
   return (
     <View style={styles.wrap}>
       <TextInput
-        value={queryText}
-        onChangeText={handleChange}
+        value={value}
+        onChangeText={onChange}
         placeholder={placeholder}
         style={styles.input}
         accessibilityLabel="Kolom pencarian"
@@ -28,7 +22,7 @@ export default function SearchBar({
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: SPACE.l, // huruf L kecil, bukan angka 1
+    paddingHorizontal: SPACE.l,
     paddingVertical: SPACE.m,
   },
   input: {
