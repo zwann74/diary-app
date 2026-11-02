@@ -10,7 +10,7 @@ function todayLocal() {
 }
 
 // True jika teks berformat YYYY-MM-DD dan merupakan tanggal yang benar.
-function isValidDate(text) {
+export function isValidDate(text) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
   const [y, m, d] = text.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
