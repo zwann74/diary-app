@@ -17,6 +17,7 @@ import SearchBar from '../components/SearchBar';
 import EntryForm from '../components/EntryForm';
 
 const STORAGE_KEY = 'diary-app:entries';
+const LIKED_KEY = 'diary-app:liked';
 
 const INITIAL_ENTRIES = [
   {
@@ -63,18 +64,26 @@ export default function DiaryListScreen() {
     ? Math.floor((availWidth - SPACE.l * 2 - SPACE.m) / 2)
     : undefined;
 
-  // Muat entri tersimpan saat layar pertama kali tampil.
+  // Muat entri dan status suka saat layar pertama kali tampil.
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw && active) {
-          const saved = JSON.parse(raw);
+        const [rawEntries, rawLiked] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY),
+          AsyncStorage.getItem(LIKED_KEY),
+        ]);
+        if (!active) return;
+        if (rawEntries) {
+          const saved = JSON.parse(rawEntries);
           if (Array.isArray(saved)) setEntries(saved);
         }
+        if (rawLiked) {
+          const ids = JSON.parse(rawLiked);
+          if (Array.isArray(ids)) setLikedIds(new Set(ids));
+        }
       } catch (e) {
-        console.warn('Gagal memuat entri:', e);
+        console.warn('Gagal memuat data:', e);
       } finally {
         if (active) setLoaded(true);
       }
@@ -84,7 +93,7 @@ export default function DiaryListScreen() {
     };
   }, []);
 
-  // Simpan setiap kali entri berubah, setelah pemuatan awal selesai.
+  // Simpan entri setiap kali berubah, setelah pemuatan awal selesai.
   useEffect(() => {
     if (!loaded) return;
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(entries)).catch((e) =>
@@ -92,13 +101,26 @@ export default function DiaryListScreen() {
     );
   }, [entries, loaded]);
 
-  // DERIVED STATE: Memfilter entri berdasarkan kata kunci pencarian
+  // Simpan status suka setiap kali berubah, setelah pemuatan awal selesai.
+  useEffect(() => {
+    if (!loaded) return;
+    AsyncStorage.setItem(LIKED_KEY, JSON.stringify([...likedIds])).catch((e) =>
+      console.warn('Gagal menyimpan status suka:', e)
+    );
+  }, [likedIds, loaded]);
+
+  // DERIVED STATE: urutkan berdasarkan tanggal (terbaru di atas),
+  // lalu filter berdasarkan kata kunci pencarian.
   const filtered = useMemo(() => {
-    if (!query.trim()) return entries;
+    const sorted = [...entries].sort(
+      (a, b) => b.date.localeCompare(a.date) || b.id - a.id
+    );
+    if (!query.trim()) return sorted;
     const q = query.toLowerCase();
-    return entries.filter((entry) =>
+    return sorted.filter((entry) =>
       entry.title.toLowerCase().includes(q) ||
       entry.preview.toLowerCase().includes(q) ||
+      (entry.body ?? '').toLowerCase().includes(q) ||
       entry.date.toLowerCase().includes(q)
     );
   }, [entries, query]);
@@ -118,10 +140,18 @@ export default function DiaryListScreen() {
   const addEntry = (newEntry) => {
     setEntries((prev) => [newEntry, ...prev]);
   };
+
   const deleteEntry = (id) => {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    setLikedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
     setSelected(null);
   };
+
   const updateEntry = (id, changes) => {
     setEntries((prev) =>
       prev.map((entry) => (entry.id === id ? { ...entry, ...changes } : entry))

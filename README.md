@@ -16,12 +16,14 @@
 - `DiaryCard` reusable dengan `Pressable`, `accessibilityLabel`, dan tombol suka.
 - `DiaryDetailModal` untuk menampilkan detail entri (gambar mood, isi, tombol Tutup).
 - Layout responsif: 1 kolom di ponsel, 2 kolom saat lebar layar ≥ 600px.
-- `SearchBar` untuk mencari entri berdasarkan judul, ringkasan, atau tanggal.
+- `SearchBar` untuk mencari entri berdasarkan judul, ringkasan, isi, atau tanggal.
 - `EntryForm` untuk menambah entri baru (judul, tanggal, ringkasan).
 - Data awal berisi 3 entri lengkap dengan ringkasan dan isi.
 - Entri disimpan permanen dengan AsyncStorage, jadi tetap ada setelah aplikasi dimuat ulang.
 - Hapus entri dengan konfirmasi di dalam modal detail.
 - Edit entri langsung di modal detail, dengan validasi tanggal.
+- Daftar diurutkan menurut tanggal, terbaru di atas.
+- Status suka ikut tersimpan.
 
 ## Struktur Proyek
 
@@ -46,4 +48,4 @@ Prop `key={keyForCols}` dipasang pada `FlatList` karena React Native tidak mengi
 
 ## Keterbatasan Saat Ini
 
-- Status suka belum disimpan, jadi hilang saat aplikasi dimuat ulang.
+- Data hanya tersimpan di perangkat atau browser itu, belum ada sinkronisasi atau cadangan.
